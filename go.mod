@@ -1,6 +1,8 @@
 module github.com/ethereum-optimism/optimism
 
-go 1.21
+go 1.21.1
+
+toolchain go1.22.0
 
 require (
 	github.com/BurntSushi/toml v1.3.2
@@ -34,6 +36,7 @@ require (
 	github.com/libp2p/go-libp2p-pubsub v0.10.0
 	github.com/libp2p/go-libp2p-testing v0.12.0
 	github.com/mattn/go-isatty v0.0.20
+	github.com/memoio/go-da-client v0.0.0-20240325075042-718c05e3b7a3
 	github.com/multiformats/go-base32 v0.1.0
 	github.com/multiformats/go-multiaddr v0.12.2
 	github.com/multiformats/go-multiaddr-dns v0.3.1

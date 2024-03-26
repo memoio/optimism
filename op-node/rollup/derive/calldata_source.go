@@ -2,6 +2,7 @@ package derive
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -11,8 +12,19 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 
+	memo "github.com/ethereum-optimism/optimism/op-memo"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 )
+
+var daClient *memo.DAClient
+
+func SetDAClient(c *memo.DAClient) error {
+	if daClient != nil {
+		return errors.New("da client already configured")
+	}
+	daClient = c
+	return nil
+}
 
 // CalldataSource is a fault tolerant approach to fetching data.
 // The constructor will never fail & it will instead re-attempt the fetcher
@@ -80,7 +92,36 @@ func DataFromEVMTransactions(dsCfg DataSourceConfig, batcherAddr common.Address,
 	out := []eth.Data{}
 	for _, tx := range txs {
 		if isValidBatchTx(tx, dsCfg.l1Signer, dsCfg.batchInboxAddress, batcherAddr) {
-			out = append(out, tx.Data())
+			// MEMODA: if the calldata is represented in MemoDerivation marker, then fetch it from MemoDA layer
+			data := tx.Data()
+			switch len(data) {
+			case 0:
+				out = append(out, data)
+			default:
+				switch data[0] {
+				case memo.DerivationVersionMemo:
+					log.Info("MemoDA: blob request", "id", hex.EncodeToString(tx.Data()))
+					ctx, cancel := context.WithTimeout(context.Background(), daClient.GetTimeout)
+					blobs, err := daClient.Client.Get(ctx, [][]byte{data[1:]})
+					cancel()
+					if err != nil {
+						log.Warn("MemoDA: failed to resolve frame", "err", err)
+						log.Info("MemoDA: using eth fallback")
+						out = append(out, data)
+					}
+					if len(blobs) != 1 {
+						log.Warn("MemoDA: unexpected length for blobs", "expected", 1, "got", len(blobs))
+						if len(blobs) == 0 {
+							log.Warn("MemoDA: skipping empty blobs")
+							continue
+						}
+					}
+					out = append(out, blobs[0])
+				default:
+					out = append(out, data)
+					log.Info("MemoDA: using eth fallback")
+				}
+			}
 		}
 	}
 	return out

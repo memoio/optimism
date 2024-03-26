@@ -11,6 +11,7 @@
 !/op-dispute-mon
 !/op-conductor
 !/op-heartbeat
+!/op-memo
 !/op-node
 !/op-preimage
 !/op-program

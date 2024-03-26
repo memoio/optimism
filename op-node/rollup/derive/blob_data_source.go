@@ -127,8 +127,13 @@ func dataAndHashesFromTxs(txs types.Transactions, config *DataSourceConfig, batc
 		}
 		// handle non-blob batcher transactions by extracting their calldata
 		if tx.Type() != types.BlobTxType {
-			calldata := eth.Data(tx.Data())
-			data = append(data, blobOrCalldata{nil, &calldata})
+			logger := log.New("tx", tx.Hash())
+			calldata := DataFromEVMTransactions(*config, batcherAddr, types.Transactions{tx}, logger)
+			if len(calldata) == 0 {
+				log.Warn("MemoDA: skipping empty calldata")
+				continue
+			}
+			data = append(data, blobOrCalldata{nil, &calldata[0]})
 			continue
 		}
 		// handle blob batcher transactions by extracting their blob hashes, ignoring any calldata.

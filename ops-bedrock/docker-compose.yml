@@ -68,6 +68,7 @@ services:
     command: >
       op-node
       --l1=ws://l1:8546
+      --l1.beacon.ignore
       --l2=http://l2:8551
       --l2.jwt-secret=/config/test-jwt-secret.txt
       --sequencer.enabled
@@ -89,6 +90,9 @@ services:
       --metrics.port=7300
       --pprof.enabled
       --rpc.enable-admin
+    environment:
+      # Note: this should be replaced with the actual DA rpc server
+      OP_NODE_DA_RPC: "http://127.0.0.1:26650"
     ports:
       - "7545:8545"
       - "9003:9003"
@@ -153,6 +157,7 @@ services:
       OP_BATCHER_L1_ETH_RPC: http://l1:8545
       OP_BATCHER_L2_ETH_RPC: http://l2:8545
       OP_BATCHER_ROLLUP_RPC: http://op-node:8545
+      OFFLINE_GAS_ESTIMATION: null
       OP_BATCHER_MAX_CHANNEL_DURATION: 1
       OP_BATCHER_SUB_SAFETY_MARGIN: 4 # SWS is 15, ChannelTimeout is 40
       OP_BATCHER_POLL_INTERVAL: 1s
@@ -163,6 +168,8 @@ services:
       OP_BATCHER_METRICS_ENABLED: "true"
       OP_BATCHER_RPC_ENABLE_ADMIN: "true"
       OP_BATCHER_BATCH_TYPE: 0
+      # Note: this should be replaced with the actual DA rpc server
+      OP_BATCHER_DA_RPC: "http://127.0.0.1:26650"
 
   op-challenger:
     depends_on:

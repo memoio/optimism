@@ -9,6 +9,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/ethereum-optimism/optimism/op-batcher/compressor"
+	memo "github.com/ethereum-optimism/optimism/op-memo"
 	plasma "github.com/ethereum-optimism/optimism/op-plasma"
 	opservice "github.com/ethereum-optimism/optimism/op-service"
 	openum "github.com/ethereum-optimism/optimism/op-service/enum"
@@ -160,6 +161,7 @@ func init() {
 	optionalFlags = append(optionalFlags, oppprof.CLIFlags(EnvVarPrefix)...)
 	optionalFlags = append(optionalFlags, txmgr.CLIFlags(EnvVarPrefix)...)
 	optionalFlags = append(optionalFlags, plasma.CLIFlags(EnvVarPrefix, "")...)
+	optionalFlags = append(optionalFlags, memo.CLIFlags(EnvVarPrefix)...)
 
 	Flags = append(requiredFlags, optionalFlags...)
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-batcher/compressor"
 	"github.com/ethereum-optimism/optimism/op-batcher/flags"
+	memo "github.com/ethereum-optimism/optimism/op-memo"
 	plasma "github.com/ethereum-optimism/optimism/op-plasma"
 	oplog "github.com/ethereum-optimism/optimism/op-service/log"
 	opmetrics "github.com/ethereum-optimism/optimism/op-service/metrics"
@@ -88,6 +89,7 @@ type CLIConfig struct {
 	PprofConfig   oppprof.CLIConfig
 	RPC           oprpc.CLIConfig
 	PlasmaDA      plasma.CLIConfig
+	MemoDA        memo.CLIConfig
 }
 
 func (c *CLIConfig) Check() error {
@@ -136,6 +138,9 @@ func (c *CLIConfig) Check() error {
 	if err := c.RPC.Check(); err != nil {
 		return err
 	}
+	if err := c.MemoDA.Check(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -166,5 +171,6 @@ func NewConfig(ctx *cli.Context) *CLIConfig {
 		PprofConfig:                  oppprof.ReadCLIConfig(ctx),
 		RPC:                          oprpc.ReadCLIConfig(ctx),
 		PlasmaDA:                     plasma.ReadCLIConfig(ctx),
+		MemoDA:                       memo.ReadCLIConfig(ctx),
 	}
 }
