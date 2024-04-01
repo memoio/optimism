@@ -77,7 +77,7 @@ type Config struct {
 
 	// Plasma DA config
 	Plasma plasma.CLIConfig
-	MemoDA memo.Config
+	MeeDA  memo.Config
 }
 
 type RPCConfig struct {
@@ -176,7 +176,7 @@ func (cfg *Config) Check() error {
 	if err := cfg.Plasma.Check(); err != nil {
 		return fmt.Errorf("plasma config error: %w", err)
 	}
-	if err := cfg.MemoDA.Check(); err != nil {
+	if err := cfg.MeeDA.Check(); err != nil {
 		return fmt.Errorf("da config error: %w", err)
 	}
 	return nil

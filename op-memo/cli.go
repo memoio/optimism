@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	defaultDaRpc   = "localhost:26650"
+	defaultDaRpc   = "nil"
 	ErrInvalidPort = errors.New("invalid port")
 )
 
@@ -56,6 +56,10 @@ type Config struct {
 func (c Config) Check() error {
 	if c.DaRpc == "" {
 		c.DaRpc = defaultDaRpc
+		return nil
+	}
+	if c.DaRpc == defaultDaRpc {
+		return nil
 	}
 
 	if _, err := url.Parse(c.DaRpc); err != nil {
@@ -72,6 +76,10 @@ type CLIConfig struct {
 func (c CLIConfig) Check() error {
 	if c.DaRpc == "" {
 		c.DaRpc = defaultDaRpc
+		return nil
+	}
+	if c.DaRpc == defaultDaRpc {
+		return nil
 	}
 
 	if _, err := url.Parse(c.DaRpc); err != nil {

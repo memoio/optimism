@@ -92,7 +92,11 @@ func DataFromEVMTransactions(dsCfg DataSourceConfig, batcherAddr common.Address,
 	out := []eth.Data{}
 	for _, tx := range txs {
 		if isValidBatchTx(tx, dsCfg.l1Signer, dsCfg.batchInboxAddress, batcherAddr) {
-			// MEMODA: if the calldata is represented in MemoDerivation marker, then fetch it from MemoDA layer
+			// MeeDA: if the calldata is represented in MemoDerivation marker, then fetch it from MeeDA layer
+			if daClient == nil {
+				out = append(out, tx.Data())
+				continue
+			}
 			data := tx.Data()
 			switch len(data) {
 			case 0:
@@ -100,26 +104,27 @@ func DataFromEVMTransactions(dsCfg DataSourceConfig, batcherAddr common.Address,
 			default:
 				switch data[0] {
 				case memo.DerivationVersionMemo:
-					log.Info("MemoDA: blob request", "id", hex.EncodeToString(tx.Data()))
+					log.Info("MeeDA: blob request", "id", hex.EncodeToString(tx.Data()))
 					ctx, cancel := context.WithTimeout(context.Background(), daClient.GetTimeout)
 					blobs, err := daClient.Client.Get(ctx, [][]byte{data[1:]})
 					cancel()
 					if err != nil {
-						log.Warn("MemoDA: failed to resolve frame", "err", err)
-						log.Info("MemoDA: using eth fallback")
+						log.Warn("MeeDA: failed to resolve frame", "err", err)
+						log.Info("MeeDA: using eth fallback")
 						out = append(out, data)
+						continue
 					}
 					if len(blobs) != 1 {
-						log.Warn("MemoDA: unexpected length for blobs", "expected", 1, "got", len(blobs))
+						log.Warn("MeeDA: unexpected length for blobs", "expected", 1, "got", len(blobs))
 						if len(blobs) == 0 {
-							log.Warn("MemoDA: skipping empty blobs")
+							log.Warn("MeeDA: skipping empty blobs")
 							continue
 						}
 					}
 					out = append(out, blobs[0])
 				default:
 					out = append(out, data)
-					log.Info("MemoDA: using eth fallback")
+					log.Info("MeeDA: using eth fallback")
 				}
 			}
 		}

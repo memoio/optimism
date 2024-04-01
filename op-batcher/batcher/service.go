@@ -336,7 +336,7 @@ func (bs *BatcherService) initPlasmaDA(cfg *CLIConfig) error {
 }
 
 func (bs *BatcherService) initDA(cfg *CLIConfig) error {
-	client, err := memo.NewDAClient(cfg.MemoDA.DaRpc)
+	client, err := memo.NewDAClient(cfg.MeeDA.DaRpc)
 	if err != nil {
 		return err
 	}

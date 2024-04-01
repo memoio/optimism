@@ -503,15 +503,17 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 func (l *BatchSubmitter) calldataTxCandidate(data []byte) *txmgr.TxCandidate {
 	l.Log.Info("building Calldata transaction candidate", "size", len(data))
 
-	// MEMODA: try to submit the data to MemoDA layer
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Duration(l.RollupConfig.BlockTime)*time.Second)
-	ids, err := l.DAClient.Client.Submit(ctx, [][]byte{data})
-	cancel()
-	if err == nil && len(ids) == 1 {
-		l.Log.Info("MemoDA: blob successfully submitted", "id", hex.EncodeToString(ids[0]))
-		data = append([]byte{memo.DerivationVersionMemo}, ids[0]...)
-	} else {
-		l.Log.Info("MemoDA: blob submission failed; falling back to eth", "err", err)
+	// MeeDA: try to submit the data to MeeDA layer
+	if l.DAClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Duration(l.RollupConfig.BlockTime)*time.Second)
+		ids, err := l.DAClient.Client.Submit(ctx, [][]byte{data})
+		cancel()
+		if err == nil && len(ids) == 1 {
+			l.Log.Info("MeeDA: blob successfully submitted", "id", hex.EncodeToString(ids[0]))
+			data = append([]byte{memo.DerivationVersionMemo}, ids[0]...)
+		} else {
+			l.Log.Info("MeeDA: blob submission failed; falling back to eth", "err", err)
+		}
 	}
 
 	return &txmgr.TxCandidate{

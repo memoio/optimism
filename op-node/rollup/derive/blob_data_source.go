@@ -130,7 +130,7 @@ func dataAndHashesFromTxs(txs types.Transactions, config *DataSourceConfig, batc
 			logger := log.New("tx", tx.Hash())
 			calldata := DataFromEVMTransactions(*config, batcherAddr, types.Transactions{tx}, logger)
 			if len(calldata) == 0 {
-				log.Warn("MemoDA: skipping empty calldata")
+				log.Warn("MeeDA: skipping empty calldata")
 				continue
 			}
 			data = append(data, blobOrCalldata{nil, &calldata[0]})

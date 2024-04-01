@@ -21,6 +21,10 @@ type DAClient struct {
 }
 
 func NewDAClient(rpc string) (*DAClient, error) {
+	// ban DA
+	if rpc == defaultDaRpc {
+		return nil, nil
+	}
 	client := daclient.NewMemoDAClient(rpc)
 	err := client.Start()
 	if err != nil {

@@ -89,7 +89,7 @@ type CLIConfig struct {
 	PprofConfig   oppprof.CLIConfig
 	RPC           oprpc.CLIConfig
 	PlasmaDA      plasma.CLIConfig
-	MemoDA        memo.CLIConfig
+	MeeDA         memo.CLIConfig
 }
 
 func (c *CLIConfig) Check() error {
@@ -138,7 +138,7 @@ func (c *CLIConfig) Check() error {
 	if err := c.RPC.Check(); err != nil {
 		return err
 	}
-	if err := c.MemoDA.Check(); err != nil {
+	if err := c.MeeDA.Check(); err != nil {
 		return err
 	}
 	return nil
@@ -171,6 +171,6 @@ func NewConfig(ctx *cli.Context) *CLIConfig {
 		PprofConfig:                  oppprof.ReadCLIConfig(ctx),
 		RPC:                          oprpc.ReadCLIConfig(ctx),
 		PlasmaDA:                     plasma.ReadCLIConfig(ctx),
-		MemoDA:                       memo.ReadCLIConfig(ctx),
+		MeeDA:                        memo.ReadCLIConfig(ctx),
 	}
 }
