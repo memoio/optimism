@@ -470,6 +470,12 @@ func (l *BatchSubmitter) sendTransaction(ctx context.Context, txdata txData, que
 			data = comm.TxData()
 		}
 		candidate = l.calldataTxCandidate(data)
+		if candidate == nil {
+			l.Log.Error("Failed to post input to DA")
+			// requeue frame if we fail to post to the DA Provider so it can be retried
+			l.recordFailedTx(txdata.ID(), nil)
+			return nil
+		}
 	}
 
 	intrinsicGas, err := core.IntrinsicGas(candidate.TxData, nil, false, true, true, false)
@@ -512,7 +518,9 @@ func (l *BatchSubmitter) calldataTxCandidate(data []byte) *txmgr.TxCandidate {
 			l.Log.Info("MeeDA: blob successfully submitted", "id", hex.EncodeToString(ids[0]))
 			data = append([]byte{memo.DerivationVersionMemo}, ids[0]...)
 		} else {
-			l.Log.Info("MeeDA: blob submission failed; falling back to eth", "err", err)
+			// MeeDA: not going to fall back to eth, cause this data may be too large to be stored in TxData
+			// l.Log.Info("MeeDA: blob submission failed; falling back to eth", "err", err)
+			return nil
 		}
 	}
 

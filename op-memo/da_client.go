@@ -7,10 +7,6 @@ import (
 )
 
 var (
-	getRoute  = "/da/getObject"
-	putRoute  = "/da/putObject"
-	initRoute = "/da/warmup"
-
 	getTimeout = time.Minute
 )
 
