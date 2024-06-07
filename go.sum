@@ -534,8 +534,8 @@ github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m
 github.com/mattn/go-runewidth v0.0.14 h1:+xnbZSEeDbOIg5/mE6JF0w6n9duR1l3/WmbinWVwUuU=
 github.com/mattn/go-runewidth v0.0.14/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/memoio/go-da-client v0.0.0-20240325075042-718c05e3b7a3 h1:twYg89fLvw33XziaGI1NxwxPGdP1yEz8T78cXgWFG6g=
-github.com/memoio/go-da-client v0.0.0-20240325075042-718c05e3b7a3/go.mod h1:qIahoGQKf7Rhg1iDV/RAg7Q2dGqf29BvraGYsJCDo5s=
+github.com/memoio/go-da-client v0.0.0-20240530094232-13517f8530da h1:jAjT7hUxTvQRtE7G/97BxIU3eQGqhnxmbsie4hyhXNQ=
+github.com/memoio/go-da-client v0.0.0-20240530094232-13517f8530da/go.mod h1:qIahoGQKf7Rhg1iDV/RAg7Q2dGqf29BvraGYsJCDo5s=
 github.com/microcosm-cc/bluemonday v1.0.1/go.mod h1:hsXNsILzKxV+sX77C5b8FSuKF00vh2OMYv+xgHpAMF4=
 github.com/miekg/dns v1.1.41/go.mod h1:p6aan82bvRIyn+zDIv9xYNUpwa73JcSh9BKwknJysuI=
 github.com/miekg/dns v1.1.56 h1:5imZaSeoRNvpM9SzWNhEcP9QliKiz20/dA2QabIGVnE=
