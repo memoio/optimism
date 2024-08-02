@@ -156,6 +156,9 @@ func (c *CLIConfig) Check() error {
 	if err := c.RPC.Check(); err != nil {
 		return err
 	}
+	if err := c.PlasmaDA.Check(); err != nil {
+		return err
+	}
 	return nil
 }
 

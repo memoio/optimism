@@ -3,6 +3,8 @@ package plasma
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +16,11 @@ var ErrNotFound = errors.New("not found")
 
 // ErrInvalidInput is returned when the input is not valid for posting to the DA storage.
 var ErrInvalidInput = errors.New("invalid input")
+
+var (
+	getRoute = "/getObject"
+	putRoute = "/putObject"
+)
 
 // DAClient is an HTTP client to communicate with a DA storage service.
 // It creates commitments and retrieves input data + verifies if needed.
@@ -31,10 +38,14 @@ func NewDAClient(url string, verify bool, pc bool) *DAClient {
 
 // GetInput returns the input data for the given encoded commitment bytes.
 func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/get/0x%x", c.url, comm.Encode()), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url+getRoute, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
+	query := req.URL.Query()
+	query.Set("id", string(comm.Encode()))
+	req.URL.RawQuery = query.Encode()
+	// send request and get response
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -43,7 +54,7 @@ func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, e
 		return nil, ErrNotFound
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get preimage: %v", resp.StatusCode)
+		return nil, fmt.Errorf("DA: failed to get preimage: %v", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	input, err := io.ReadAll(resp.Body)
@@ -109,31 +120,45 @@ func (c *DAClient) setInput(ctx context.Context, img []byte) (CommitmentData, er
 		return nil, ErrInvalidInput
 	}
 
-	body := bytes.NewReader(img)
-	url := fmt.Sprintf("%s/put/", c.url)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+	payload := make(map[string]string)
+	hexdata := hex.EncodeToString(img)
+	payload["data"] = hexdata
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	url := c.url + putRoute
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(b))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/octet-stream")
+	// send request and get response
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to store data: %v", resp.StatusCode)
+		return nil, fmt.Errorf("DA: failed to store data: %v", resp.StatusCode)
 	}
 
-	b, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	comm, err := DecodeCommitmentData(b)
-	if err != nil {
+	res := make(map[string]string)
+	if err = json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 
+	mid, ok := res["id"]
+	if !ok {
+		return nil, fmt.Errorf("DA: no commitment is returned after putObject")
+	}
+	comm, err := DecodeCommitmentData([]byte(mid))
+	if err != nil {
+		return nil, err
+	}
 	return comm, nil
 }
