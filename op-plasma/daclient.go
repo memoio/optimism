@@ -43,7 +43,8 @@ func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, e
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 	query := req.URL.Query()
-	query.Set("id", string(comm.Encode()))
+	commit := comm.Encode()
+	query.Set("id", string(commit[1:]))
 	req.URL.RawQuery = query.Encode()
 	// send request and get response
 	resp, err := http.DefaultClient.Do(req)
@@ -156,7 +157,10 @@ func (c *DAClient) setInput(ctx context.Context, img []byte) (CommitmentData, er
 	if !ok {
 		return nil, fmt.Errorf("DA: no commitment is returned after putObject")
 	}
-	comm, err := DecodeCommitmentData([]byte(mid))
+	commit := make([]byte,0)
+	commit = append(commit, byte(1))
+	commit = append(commit, []byte(mid)...)
+	comm, err := DecodeCommitmentData(commit)
 	if err != nil {
 		return nil, err
 	}
