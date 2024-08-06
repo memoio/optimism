@@ -46,6 +46,9 @@ func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, e
 	commit := comm.Encode()
 	query.Set("id", string(commit[1:]))
 	req.URL.RawQuery = query.Encode()
+
+	fmt.Println("begin get L2 data from Meeda...")
+
 	// send request and get response
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -69,6 +72,8 @@ func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, e
 		}
 
 	}
+
+	fmt.Println("Meeda return L2 data successfully")
 	return input, nil
 }
 
@@ -117,6 +122,8 @@ func (c *DAClient) setInputWithCommit(ctx context.Context, comm CommitmentData, 
 
 // setInput sets the input data and reads the respective DA generated commitment.
 func (c *DAClient) setInput(ctx context.Context, img []byte) (CommitmentData, error) {
+	fmt.Println("begin input L2 data to Meeda...")
+
 	if len(img) == 0 {
 		return nil, ErrInvalidInput
 	}
@@ -157,6 +164,9 @@ func (c *DAClient) setInput(ctx context.Context, img []byte) (CommitmentData, er
 	if !ok {
 		return nil, fmt.Errorf("DA: no commitment is returned after putObject")
 	}
+
+	fmt.Println("Meeda returns commitment: ", mid)
+
 	commit := make([]byte,0)
 	commit = append(commit, byte(1))
 	commit = append(commit, []byte(mid)...)
