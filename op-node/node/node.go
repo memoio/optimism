@@ -388,7 +388,7 @@ func (n *OpNode) initL2(ctx context.Context, cfg *Config) error {
 	// if plasma is not explicitly activated in the node CLI, the config + any error will be ignored.
 	rpCfg, err := cfg.Rollup.GetOPPlasmaConfig()
 	if cfg.Plasma.Enabled && err != nil {
-		return fmt.Errorf("failed to get plasma config: %w", err)
+		n.log.Info("current plasma only support keccak256 commitment, so we don't apply plasma, we use altda(Meeda) to store, and Meeda support challenge")
 	}
 	plasmaDA := plasma.NewPlasmaDA(n.log, cfg.Plasma, rpCfg, n.metrics.PlasmaMetrics)
 	if cfg.SafeDBPath != "" {
