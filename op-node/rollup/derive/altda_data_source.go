@@ -69,6 +69,7 @@ func (s *AltDADataSource) Next(ctx context.Context) (eth.Data, error) {
 		}
 		s.comm = comm
 	}
+	s.log.Info("begin get input from alt-da...", s.id.Number)
 	// use the commitment to fetch the input from the AltDA provider.
 	data, err := s.fetcher.GetInput(ctx, s.l1, s.comm, s.id)
 	// GetInput may call for a reorg if the pipeline is stalled and the AltDA manager

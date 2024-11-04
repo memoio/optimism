@@ -3,6 +3,8 @@ package altda
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +17,11 @@ var ErrNotFound = errors.New("not found")
 
 // ErrInvalidInput is returned when the input is not valid for posting to the DA storage.
 var ErrInvalidInput = errors.New("invalid input")
+
+var (
+	getRoute = "/getObject"
+	putRoute = "/putObject"
+)
 
 // DAClient is an HTTP client to communicate with a DA storage service.
 // It creates commitments and retrieves input data + verifies if needed.
@@ -38,10 +45,18 @@ func NewDAClient(url string, verify bool, pc bool) *DAClient {
 
 // GetInput returns the input data for the given encoded commitment bytes.
 func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/get/0x%x", c.url, comm.Encode()), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url+getRoute, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
+	query := req.URL.Query()
+	commit := comm.Encode()
+	query.Set("id", string(commit[1:]))
+	req.URL.RawQuery = query.Encode()
+
+	fmt.Println("begin get L2 data from Meeda...")
+
+	// send request and get response
 	client := &http.Client{Timeout: c.getTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -51,7 +66,7 @@ func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, e
 		return nil, ErrNotFound
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get preimage: %v", resp.StatusCode)
+		return nil, fmt.Errorf("DA: failed to get preimage: %v", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	input, err := io.ReadAll(resp.Body)
@@ -65,6 +80,8 @@ func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, e
 		}
 
 	}
+
+	fmt.Println("Meeda return L2 data successfully")
 	return input, nil
 }
 
@@ -114,13 +131,22 @@ func (c *DAClient) setInputWithCommit(ctx context.Context, comm CommitmentData, 
 
 // setInput sets the input data and reads the respective DA generated commitment.
 func (c *DAClient) setInput(ctx context.Context, img []byte) (CommitmentData, error) {
+	fmt.Println("begin input L2 data to Meeda...")
+
 	if len(img) == 0 {
 		return nil, ErrInvalidInput
 	}
 
-	body := bytes.NewReader(img)
-	url := fmt.Sprintf("%s/put", c.url)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+	payload := make(map[string]string)
+	hexdata := hex.EncodeToString(img)
+	payload["data"] = hexdata
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	url := c.url + putRoute
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(b))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
@@ -132,18 +158,31 @@ func (c *DAClient) setInput(ctx context.Context, img []byte) (CommitmentData, er
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to store data: %v", resp.StatusCode)
+		return nil, fmt.Errorf("DA: failed to store data: %v", resp.StatusCode)
 	}
 
-	b, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	comm, err := DecodeCommitmentData(b)
-	if err != nil {
+	res := make(map[string]string)
+	if err = json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 
+	mid, ok := res["id"]
+	if !ok {
+		return nil, fmt.Errorf("DA: no commitment is returned after putObject")
+	}
+
+	fmt.Println("Meeda returns commitment: ", mid)
+
+	commit := make([]byte,0)
+	commit = append(commit, byte(1))
+	commit = append(commit, []byte(mid)...)
+	comm, err := DecodeCommitmentData(commit)
+	if err != nil {
+		return nil, err
+	}
 	return comm, nil
 }
